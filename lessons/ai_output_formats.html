@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f4f0e8">
+<title>AI 輸出格式｜Arcology Learning Hub</title>
+<style>
+:root{--bg:#f4f0e8;--paper:#faf8f3;--ink:#222220;--muted:#76736d;--line:#d8d2c8;--soft:#eee9df;--dark:#292927;--white:#fff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;line-height:1.65}.shell{max-width:980px;margin:auto;padding:30px 18px 70px}.back{display:inline-block;margin-bottom:28px;color:var(--muted);font-size:14px}.kicker{font-size:12px;letter-spacing:.22em;color:var(--muted);text-transform:uppercase}h1{font-size:clamp(34px,6vw,58px);line-height:1.05;margin:8px 0 14px;letter-spacing:-.035em}header p{color:var(--muted);max-width:720px}.grid{display:grid;gap:18px;margin-top:32px}.card{background:var(--paper);border:1px solid var(--line);border-radius:22px;padding:22px}.num{font-size:12px;color:var(--muted);letter-spacing:.15em}.card h2{font-size:22px;line-height:1.35;margin:7px 0 8px}.fit{color:var(--muted);font-size:14px;margin-bottom:16px}.prompt{position:relative;background:var(--dark);color:#f7f4ee;border-radius:16px;padding:18px;padding-top:54px;white-space:pre-wrap;font-size:14px;line-height:1.75}.copy{position:absolute;right:12px;top:12px;border:1px solid #5a5955;background:#3a3a37;color:#fff;border-radius:999px;padding:7px 12px;cursor:pointer}.copy:active{transform:scale(.98)}.note{font-size:12px;color:var(--muted);margin-top:10px}.foot{margin-top:38px;padding-top:18px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}@media(max-width:620px){.shell{padding:22px 14px 55px}.card{padding:17px;border-radius:18px}.card h2{font-size:19px}.prompt{font-size:13px}}
+</style>
+</head>
+<body><main class="shell">
+<a class="back" href="../index.html#tools">← 回到共用工具箱</a>
+<header><div class="kicker">Tool Box · AI Output Formats</div><h1>AI 輸出格式</h1><p>同一個問題，不一定只能叫 AI「回答」。先決定你希望資訊怎麼被理解，再指定適合的輸出形式。</p></header>
+<section class="grid">
+<article class="card"><div class="num">01 / TEXT</div><h2>簡潔文字｜航太文件 ASD-STE100 清晰寫作</h2><div class="fit">適合：技術說明、SOP、報告摘要、教育訓練、新手說明。</div><div class="prompt"><button class="copy" type="button">一鍵複製</button><span>請用中文解釋【主題】。
+
+寫作時借用 ASD-STE100 的清晰寫作原則：
+1. 句子要短，每句盡量不超過 30 個字。
+2. 一句只講一件事。
+3. 同一個概念從頭到尾使用同一個詞。
+4. 使用主動語態，讓每句的主詞清楚。
+5. 避免堆疊名詞與不必要的術語。
+6. 術語第一次出現時，用白話簡短說明。
+
+這是中文清晰寫作要求，不代表符合正式 ASD-STE100 英文規範。</span></div></article>
+<article class="card"><div class="num">02 / VISUAL</div><h2>一張圖｜把複雜概念視覺化</h2><div class="fit">適合：流程、系統架構、因果關係、工作流程、技術原理。</div><div class="prompt"><button class="copy" type="button">一鍵複製</button><span>請用一張圖解釋【主題】，不要使用長篇文字。
+
+圖中請包含：
+1. 關鍵元件
+2. 元件之間的關係
+3. 流程或資訊移動方向
+4. 必要的箭頭或連接線
+5. 每個標籤不超過 10 個字
+
+讓第一次接觸這個主題的人，也能從圖中理解整體關係。</span></div><div class="note">AI 可能直接產生圖片，也可能輸出 Mermaid 等圖表程式碼。</div></article>
+<article class="card"><div class="num">03 / INTERACTIVE</div><h2>互動網頁｜HTML 單頁互動解說</h2><div class="fit">適合：教學模擬器、計算工具、互動教材、參數比較、Vibe Coding 入門。</div><div class="prompt"><button class="copy" type="button">一鍵複製</button><span>請用 HTML 製作一個單頁互動網頁，解釋【主題】。
+
+網頁需要包含：
+1. 簡潔的主題說明
+2. 可以點開或收合的段落說明
+3. 至少一個可以操作的互動元件
+4. 使用者調整參數後，可以立即看到結果變化
+5. 適合手機與電腦瀏覽
+6. 所有 HTML、CSS、JavaScript 都放在同一個檔案
+
+請輸出可以直接儲存為 .html 並用瀏覽器開啟的完整程式碼。</span></div></article>
+</section>
+<div class="foot">Arcology Learning Hub · OPEN · EVOLVING · ADAPTING</div>
+</main>
+<script>
+document.querySelectorAll('.copy').forEach(btn=>btn.addEventListener('click',async()=>{const text=btn.nextElementSibling.innerText;try{await navigator.clipboard.writeText(text);const old=btn.textContent;btn.textContent='已複製';setTimeout(()=>btn.textContent=old,1500)}catch(e){const r=document.createRange();r.selectNode(btn.nextElementSibling);const s=window.getSelection();s.removeAllRanges();s.addRange(r);document.execCommand('copy');s.removeAllRanges();btn.textContent='已複製';setTimeout(()=>btn.textContent='一鍵複製',1500)}}));
+</script></body></html>
