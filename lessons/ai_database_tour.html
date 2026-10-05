@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>資料庫建案｜互動式 HTML 建案導覽</title>
+<style>
+:root{
+  --bg:#0c1117; --panel:#121a23; --panel2:#18232e; --ink:#edf3f7; --muted:#aab7c4;
+  --line:#334553; --gold:#d8b26e; --cyan:#69c7d7; --green:#79c79b; --red:#e88b7d;
+  --shadow:0 18px 60px rgba(0,0,0,.34); --radius:20px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:radial-gradient(circle at 20% 0,#172733 0,#0c1117 42%,#080b0f 100%);color:var(--ink);font-family:"Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;line-height:1.65}
+button{font:inherit}
+a{color:var(--cyan)}
+.topbar{position:sticky;top:0;z-index:50;background:rgba(10,15,20,.86);backdrop-filter:blur(14px);border-bottom:1px solid #263541}
+.nav{max-width:1280px;margin:auto;padding:12px 22px;display:flex;align-items:center;gap:14px}
+.logo{font-weight:800;letter-spacing:.12em}.logo small{display:block;color:var(--gold);font-size:10px;letter-spacing:.25em}
+.progress{margin-left:auto;height:7px;width:190px;background:#263541;border-radius:20px;overflow:hidden}.progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--gold),var(--cyan));transition:.4s}
+.nav span{font-size:12px;color:var(--muted)}
+main{max-width:1280px;margin:auto;padding:0 22px 80px}
+.hero{min-height:650px;display:grid;grid-template-columns:1.05fr .95fr;align-items:center;gap:35px}
+.eyebrow{color:var(--gold);font-weight:700;letter-spacing:.2em;font-size:13px}
+h1{font-size:clamp(42px,6vw,78px);line-height:1.05;margin:15px 0}.hero p{font-size:19px;color:var(--muted);max-width:650px}
+.cta,.ghost,.choice,.tile,.test-opt{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:14px;padding:12px 18px;cursor:pointer;transition:.2s}
+.cta{background:linear-gradient(135deg,#b88d4b,#e1c17c);color:#15100a;border:0;font-weight:800;box-shadow:0 12px 35px rgba(216,178,110,.2)}
+.cta:hover,.ghost:hover,.choice:hover,.tile:hover,.test-opt:hover{transform:translateY(-2px);border-color:var(--gold)}
+.badge{display:inline-flex;gap:8px;align-items:center;padding:6px 10px;border-radius:999px;background:#1c2933;color:var(--muted);font-size:12px}
+.section{padding:75px 0;border-top:1px solid #1d2a34}.section-head{display:flex;justify-content:space-between;gap:25px;align-items:end;margin-bottom:28px}.section h2{font-size:34px;margin:0}.section-head p{color:var(--muted);max-width:650px;margin:0}
+.panel{background:linear-gradient(145deg,rgba(24,35,46,.96),rgba(14,20,27,.96));border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.diagram{padding:22px;overflow:hidden}
+.diagram svg{width:100%;height:auto;display:block}
+.callout{fill:#111a22;stroke:#526778;stroke-width:1.5}.label{fill:#eaf1f5;font-size:15px;font-weight:700}.sub{fill:#a9b7c3;font-size:12px}.gold{fill:#d8b26e}.cyan{fill:#69c7d7}.green{fill:#79c79b}
+.hot{cursor:pointer}.hot:hover{filter:brightness(1.25)}
+.mapping{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.map-card{padding:20px}.map-card .arrow{color:var(--gold);font-size:22px}.map-card strong{font-size:19px}
+.station{display:none}.station.active{display:block}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:18px}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.house{padding:18px;min-height:260px}.house h3{margin:0 0 8px}.floorplan{height:170px;border:1px solid #536574;border-radius:12px;position:relative;background:#0f171e;overflow:hidden}
+.room{position:absolute;border:1px solid #70818e;display:flex;align-items:center;justify-content:center;color:#bdc9d0;font-size:12px;background:#17232d}.r1{left:5%;top:8%;width:42%;height:38%}.r2{left:53%;top:8%;width:42%;height:38%}.r3{left:5%;top:51%;width:28%;height:40%}.r4{left:36%;top:51%;width:28%;height:40%}.r5{left:67%;top:51%;width:28%;height:40%}
+.kv{display:grid;grid-template-columns:120px 1fr;border:1px solid #30424f;border-radius:14px;overflow:hidden}.kv div{padding:11px 14px;border-bottom:1px solid #263642}.kv div:nth-child(odd){background:#15212a;color:var(--muted)}.kv div:nth-child(even){background:#101820}
+.reveal{padding:22px}.record{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:15px 0}.record div{padding:10px;border:1px solid #30424f;border-radius:10px}.key{font-family:ui-monospace,monospace;color:var(--gold)}
+.network{position:relative;min-height:390px}.node{position:absolute;padding:12px 16px;border:1px solid var(--line);border-radius:12px;background:#14202a;text-align:center}.node.center{left:50%;top:44%;transform:translate(-50%,-50%);border-color:var(--gold);box-shadow:0 0 35px rgba(216,178,110,.15)}.device{width:130px}.n1{left:5%;top:8%}.n2{right:5%;top:8%}.n3{left:7%;bottom:8%}.n4{right:7%;bottom:8%}.network svg{position:absolute;inset:0;width:100%;height:100%}
+.bridge{display:grid;grid-template-columns:1fr 180px 1fr;align-items:center;gap:12px;text-align:center}.tower{padding:35px 15px;border:1px solid var(--line);background:#14202a;border-radius:14px}.bridge-line{height:5px;background:linear-gradient(90deg,var(--cyan),var(--gold),var(--cyan));border-radius:8px;position:relative}.bridge-line:after{content:"Relationship";position:absolute;top:15px;left:50%;transform:translateX(-50%);color:var(--gold);font-size:12px}
+.basement{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-items:center}.basement .bld{padding:25px;text-align:center;border:1px solid var(--line);border-radius:12px;background:#14202a}.basement .center{grid-column:1/-1;padding:30px;border:1px solid var(--gold);border-radius:15px;background:#1b211d}
+.er-wrap{padding:25px}.er{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;align-items:center}.entity{padding:15px;border:1px solid var(--cyan);background:#10212a;border-radius:14px;cursor:pointer}.entity strong{display:block}.entity small{color:var(--muted)}.connector{height:2px;background:#526778;position:relative}.connector span{position:absolute;left:50%;top:-13px;transform:translateX(-50%);font-size:11px;color:var(--gold);white-space:nowrap}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.68);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}.modal.show{display:flex}.modal-box{max-width:720px;width:100%;padding:28px;position:relative;max-height:88vh;overflow:auto}.close{position:absolute;right:18px;top:14px;background:none;border:0;color:var(--muted);font-size:28px;cursor:pointer}
+.quiz{display:grid;gap:18px}.q{padding:20px}.q h3{margin-top:0}.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}.test-opt.correct{border-color:var(--green);background:#13271d}.test-opt.wrong{border-color:var(--red);background:#2b1917}.explain{display:none;margin-top:12px;padding:12px;border-left:3px solid var(--gold);color:#cbd6dc;background:#101820}.q.answered .explain{display:block}.score{position:sticky;bottom:16px;background:#121a23;border:1px solid var(--gold);border-radius:14px;padding:14px 18px;margin-top:20px;display:flex;justify-content:space-between;align-items:center}
+footer{border-top:1px solid #24333e;padding:30px 0;color:var(--muted);font-size:13px}
+@media(max-width:900px){.hero,.split{grid-template-columns:1fr}.mapping,.cards{grid-template-columns:1fr 1fr}.er{grid-template-columns:1fr 1fr}.progress{width:90px}.bridge{grid-template-columns:1fr}.bridge-line{height:35px}.bridge-line:after{top:8px}}
+@media(max-width:600px){main{padding:0 14px}.nav{padding:10px 14px}.nav span{display:none}.mapping,.cards,.opts,.er{grid-template-columns:1fr}.hero{min-height:560px}.section{padding:52px 0}.section h2{font-size:28px}.record{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="nav">
+    <div class="logo">DATABASE RESIDENCE <small>建案展示中心</small></div>
+    <span id="stationText">導覽進度 0%</span>
+    <div class="progress"><i id="progress"></i></div>
+  </div>
+</header>
+
+<main>
+<section class="hero">
+  <div>
+    <div class="eyebrow">INTERACTIVE DATABASE RESIDENCE</div>
+    <h1>歡迎參觀<br>資料庫建案</h1>
+    <p>你即將參觀的不是普通住宅，而是一座「可以讓資料長期居住、彼此連結、被查詢與持續擴建」的數位建案。</p>
+    <p><span class="badge">導覽規則</span> 先看建築，再看資料。先問「我們要管理什麼？」再揭露正式術語。</p>
+    <button class="cta" onclick="go('overview')">開始看房</button>
+  </div>
+  <div class="panel diagram">
+    <svg viewBox="0 0 600 460" aria-label="住宅社區概念鳥瞰圖">
+      <defs><linearGradient id="sky" x1="0" x2="1"><stop stop-color="#172b36"/><stop offset="1" stop-color="#0d151c"/></linearGradient></defs>
+      <rect width="600" height="460" rx="20" fill="url(#sky)"/>
+      <path d="M30 380 Q300 300 570 380 L570 460H30Z" fill="#16242c"/>
+      <path d="M0 150 L600 90" stroke="#38515f" stroke-width="22"/>
+      <g class="hot" onclick="openStation('A棟','overview')"><rect x="80" y="105" width="125" height="245" rx="5" fill="#28404d"/><path d="M80 105h125v245H80z" fill="none" stroke="#69c7d7"/><g fill="#a6cbd0"><rect x="96" y="125" width="18" height="12"/><rect x="124" y="125" width="18" height="12"/><rect x="152" y="125" width="18" height="12"/><rect x="96" y="155" width="18" height="12"/><rect x="124" y="155" width="18" height="12"/><rect x="152" y="155" width="18" height="12"/><rect x="96" y="185" width="18" height="12"/><rect x="124" y="185" width="18" height="12"/><rect x="152" y="185" width="18" height="12"/><rect x="96" y="215" width="18" height="12"/><rect x="124" y="215" width="18" height="12"/><rect x="152" y="215" width="18" height="12"/></g><text x="142" y="330" text-anchor="middle" class="label">A 棟</text></g>
+      <g class="hot" onclick="openStation('B棟','overview')"><rect x="255" y="80" width="125" height="270" rx="5" fill="#31434c"/><path d="M255 80h125v270H255z" fill="none" stroke="#d8b26e"/><g fill="#b9cbd0"><rect x="271" y="100" width="18" height="12"/><rect x="299" y="100" width="18" height="12"/><rect x="327" y="100" width="18" height="12"/><rect x="271" y="130" width="18" height="12"/><rect x="299" y="130" width="18" height="12"/><rect x="327" y="130" width="18" height="12"/><rect x="271" y="160" width="18" height="12"/><rect x="299" y="160" width="18" height="12"/><rect x="327" y="160" width="18" height="12"/><rect x="271" y="190" width="18" height="12"/><rect x="299" y="190" width="18" height="12"/><rect x="327" y="190" width="18" height="12"/></g><text x="317" y="330" text-anchor="middle" class="label">B 棟</text></g>
+      <g class="hot" onclick="openStation('C棟','overview')"><rect x="430" y="120" width="105" height="230" rx="5" fill="#243a47"/><path d="M430 120h105v230H430z" fill="none" stroke="#79c79b"/><g fill="#a6cbd0"><rect x="444" y="140" width="17" height="12"/><rect x="470" y="140" width="17" height="12"/><rect x="496" y="140" width="17" height="12"/><rect x="444" y="170" width="17" height="12"/><rect x="470" y="170" width="17" height="12"/><rect x="496" y="170" width="17" height="12"/><rect x="444" y="200" width="17" height="12"/><rect x="470" y="200" width="17" height="12"/><rect x="496" y="200" width="17" height="12"/></g><text x="482" y="330" text-anchor="middle" class="label">C 棟</text></g>
+      <path d="M205 210 L255 180 M380 190 L430 210" stroke="#d8b26e" stroke-width="6"/><text x="300" y="58" class="sub">空中景觀天橋・公共設施・地下室・Wi-Fi</text>
+      <rect x="230" y="370" width="150" height="42" rx="10" fill="#182d25" stroke="#79c79b"/><text x="305" y="396" text-anchor="middle" class="label">B2 共用地下室</text>
+      <circle cx="50" cy="410" r="15" fill="#69c7d7"/><text x="75" y="415" class="sub">社區 Wi-Fi</text>
+    </svg>
+  </div>
+</section>
+
+<section class="section" id="overview">
+  <div class="section-head"><div><div class="eyebrow">01 / 社區鳥瞰圖</div><h2>先不要學術語，先看這個建案</h2></div><p>每一個標示都回答一個問題：「如果這是資料世界，我們到底要管理什麼？」</p></div>
+  <div class="panel diagram">
+    <svg viewBox="0 0 1100 530">
+      <rect width="1100" height="530" rx="18" fill="#101820"/>
+      <path d="M40 420 Q550 270 1060 420" fill="none" stroke="#263b47" stroke-width="90"/>
+      <g class="hot" onclick="openStation('A棟','building')"><rect x="120" y="105" width="180" height="285" rx="6" fill="#263e4a" stroke="#69c7d7"/><text x="210" y="135" text-anchor="middle" class="label">A 棟</text><text x="210" y="160" text-anchor="middle" class="sub">多樓層・多戶</text><path d="M145 190h130M145 220h130M145 250h130M145 280h130M145 310h130M145 340h130" stroke="#79909c"/><text x="210" y="380" text-anchor="middle" class="gold">點擊：看棟別</text></g>
+      <g class="hot" onclick="openStation('B棟','building')"><rect x="460" y="70" width="180" height="320" rx="6" fill="#31434c" stroke="#d8b26e"/><text x="550" y="100" text-anchor="middle" class="label">B 棟</text><path d="M485 145h130M485 175h130M485 205h130M485 235h130M485 265h130M485 295h130M485 325h130M485 355h130" stroke="#79909c"/><text x="550" y="380" text-anchor="middle" class="gold">20F・景觀戶</text></g>
+      <g class="hot" onclick="openStation('C棟','building')"><rect x="800" y="120" width="160" height="270" rx="6" fill="#243c48" stroke="#79c79b"/><text x="880" y="150" text-anchor="middle" class="label">C 棟</text><path d="M825 180h110M825 210h110M825 240h110M825 270h110M825 300h110M825 330h110" stroke="#79909c"/><text x="880" y="380" text-anchor="middle" class="gold">公共設施</text></g>
+      <path d="M300 230 L460 190 M640 205 L800 235" stroke="#d8b26e" stroke-width="8"/><text x="550" y="184" text-anchor="middle" class="sub">空中景觀天橋 → Relationship</text>
+      <rect x="390" y="430" width="320" height="55" rx="12" fill="#1a2520" stroke="#79c79b"/><text x="550" y="464" text-anchor="middle" class="label">A / B / C 棟共同使用 B2 地下室 → N:N</text>
+      <g transform="translate(55,60)"><line x1="0" y1="0" x2="65" y2="0" stroke="#69c7d7"/><text x="75" y="5" class="sub">整個社區 → Database</text></g>
+    </svg>
+  </div>
+  <div class="mapping" style="margin-top:18px">
+    <div class="panel map-card"><strong>整個住宅社區</strong><div class="arrow">↓</div><span>Database／資料庫</span><p class="sub">教學比喻，不是 Ragic 官方等號。</p></div>
+    <div class="panel map-card"><strong>建築分類</strong><div class="arrow">↓</div><span>頁籤／頁籤組</span><p class="sub">Ragic 頁籤用來分類、整理表單；頁籤組再進一步分類頁籤。</p></div>
+    <div class="panel map-card"><strong>建築設計</strong><div class="arrow">↓</div><span>表單／欄位結構</span><p class="sub">表單是儲存資料的框架；一張表單可儲存多筆資料。</p></div>
+  </div>
+  <div class="panel reveal" style="margin-top:18px">
+    <h3>導覽員第一次揭露</h3>
+    <p>剛才您看到的是一個建案。如果把它換成資料庫語言，這個建案可以幫助我們理解資料結構。但這是<strong>學習用建築比喻</strong>，不是 Ragic 的正式定義。</p>
+    <div class="kv">
+      <div>Ragic 正式結構</div><div><strong>頁籤 → 表單 → 資料</strong></div>
+      <div>頁籤</div><div>用來分類、整理表單，概念上像資料夾。</div>
+      <div>表單</div><div>設計好的資料框架，由欄位組成，可儲存多筆資料。</div>
+      <div>資料</div><div>依照設計好的表單與欄位結構所填寫的實際內容。</div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="house">
+  <div class="section-head"><div><div class="eyebrow">02 / 戶型展示中心</div><h2>這間房子裡，哪些東西值得管理？</h2></div><p>不要先背 Entity。先從現實世界找「值得獨立管理的對象」。</p></div>
+  <div class="cards">
+    <div class="panel house"><h3>A型｜兩房兩廳</h3><div class="floorplan"><div class="room r1">主臥</div><div class="room r2">客廳</div><div class="room r3">次臥</div><div class="room r4">廚房</div><div class="room r5">衛浴</div></div><p class="sub">可管理：住戶、房間、設備、網路、車位。</p></div>
+    <div class="panel house"><h3>B型｜三房兩廳</h3><div class="floorplan"><div class="room r1">主臥</div><div class="room r2">客廳</div><div class="room r3">次臥</div><div class="room r4">書房</div><div class="room r5">廚房</div></div><p class="sub">同一個建築世界可以有不同資料組合。</p></div>
+    <div class="panel house"><h3>C型｜毛胚屋</h3><div class="floorplan"><div class="room r1">承重牆</div><div class="room r2">承重牆</div><div class="room r3">空間</div><div class="room r4">空間</div><div class="room r5">空間</div></div><p class="sub">先有結構，再放入實際內容：有助理解「框架」與「資料」的差異。</p></div>
+  </div>
+  <div class="panel reveal" style="margin-top:18px">
+    <h3>建築師問題：哪些東西可能成為 Entity？</h3>
+    <div class="mapping">
+      <div><strong>住戶</strong><p class="sub">可能是需要獨立管理的對象。</p></div>
+      <div><strong>設備</strong><p class="sub">可能需要自己的編號、型號、狀態。</p></div>
+      <div><strong>車位</strong><p class="sub">可能需要位置、使用人、狀態等資訊。</p></div>
+    </div>
+    <p><strong>正式概念：</strong>Entity 是資料建模中的概念，不等於「Ragic 表單」。某個 Entity 是否需要獨立成一張表單，要看實際管理需求。</p>
+  </div>
+</section>
+
+<section class="section" id="attribute">
+  <div class="section-head"><div><div class="eyebrow">03 / 戶別資料卡</div><h2>丁丁家的住宅</h2></div><p>從「這是什麼東西？」進一步問：「我們要描述它，需要知道哪些資訊？」</p></div>
+  <div class="split">
+    <div class="panel reveal">
+      <h3>建築師拆解</h3>
+      <div class="record">
+        <div><span class="sub">Entity</span><br><strong>住戶</strong></div>
+        <div><span class="sub">Attribute</span><br><strong>房型</strong></div>
+        <div><span class="sub">Value</span><br><strong>三房兩廳</strong></div>
+        <div><span class="sub">Attribute</span><br><strong>樓層</strong></div>
+        <div><span class="sub">Value</span><br><strong>20樓</strong></div>
+        <div><span class="sub">Attribute</span><br><strong>WIFI名稱</strong></div>
+        <div><span class="sub">Value</span><br><strong>丁丁家的WIFI</strong></div>
+      </div>
+    </div>
+    <div class="panel reveal">
+      <h3>Ragic 的正式說法</h3>
+      <p>Ragic 的<strong>欄位</strong>包含兩個部分：</p>
+      <div class="kv">
+        <div>欄位標頭</div><div>WIFI名稱</div>
+        <div>欄位值</div><div>丁丁家的WIFI</div>
+      </div>
+      <p>因此不要把「丁丁家的WIFI」稱為 Attribute。以 Ragic 的用語，它是<strong>欄位值</strong>。</p>
+      <p class="sub">教學橋接：Attribute ≈「我們想描述的特徵」；Ragic 實際操作時，會落到欄位標頭與欄位值等具體結構。</p>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="trade">
+  <div class="section-head"><div><div class="eyebrow">04 / 交易與建立資料</div><h2>現在，才開始真正「住進去」</h2></div><p>前面看到的是設計。現在依照既定結構，新增一筆實際資料。</p></div>
+  <div class="panel reveal">
+    <p>「您剛才看到的是資料庫的設計。現在我們要進行一個重要動作：建立一筆資料。」</p>
+    <button class="cta" onclick="createRecord()">購買 A 棟 20 樓 201 戶</button>
+    <div id="recordResult" style="display:none">
+      <h3>交易完成｜已建立示範資料</h3>
+      <div class="record">
+        <div>A棟</div><div>20樓</div><div>201戶</div><div>三房兩廳</div><div>45坪</div><div>景觀戶</div><div>住戶：丁丁</div><div>WIFI：丁丁家的WIFI</div>
+      </div>
+      <p>「交易」只是教學比喻。資料庫不一定透過交易建立資料；這裡代表使用者依照已設計好的表單與欄位結構，新增一筆實際資料。</p>
+      <button class="ghost" onclick="openModal('key')">領取房門鑰匙：A20-201</button>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="wifi">
+  <div class="section-head"><div><div class="eyebrow">05 / WIFI 展示區</div><h2>一個 WIFI，為什麼可以連很多設備？</h2></div><p>從生活中的連線開始理解 Cardinality。注意：關係的基數必須說清楚「從哪個方向觀察」。</p></div>
+  <div class="panel network">
+    <svg viewBox="0 0 1000 390" preserveAspectRatio="none"><line x1="500" y1="195" x2="120" y2="70" stroke="#526778" stroke-width="2"/><line x1="500" y1="195" x2="880" y2="70" stroke="#526778" stroke-width="2"/><line x1="500" y1="195" x2="150" y2="325" stroke="#526778" stroke-width="2"/><line x1="500" y1="195" x2="850" y2="325" stroke="#526778" stroke-width="2"/></svg>
+    <div class="node center"><strong>丁丁家的 WIFI</strong><small>Network</small></div>
+    <div class="node device n1">手機<br><small>Device</small></div><div class="node device n2">Apple TV<br><small>Device</small></div><div class="node device n3">智慧音箱<br><small>Device</small></div><div class="node device n4">掃地機器人<br><small>Device</small></div>
+  </div>
+  <div class="mapping" style="margin-top:18px">
+    <div class="panel map-card"><strong>WIFI → 設備</strong><div class="arrow">1 : N</div><p class="sub">一個 WIFI 可以被多個設備使用。</p></div>
+    <div class="panel map-card"><strong>Apple TV → WIFI</strong><div class="arrow">1 : 1*</div><p class="sub">在「某一時間點的連線」這個簡化假設下，可以理解為一對一。</p></div>
+    <div class="panel map-card"><strong>關鍵提醒</strong><div class="arrow">觀察方向</div><p class="sub">不要只說「Apple TV 是一對一」；必須說清楚兩端與時間條件。</p></div>
+  </div>
+</section>
+
+<section class="section" id="many">
+  <div class="section-head"><div><div class="eyebrow">06 / 手機與網路</div><h2>N : N：一支手機可以換很多網路</h2></div><p>手機可連家中、社區、公司、旅館 Wi-Fi；一個 Wi-Fi 也可服務很多手機與設備。</p></div>
+  <div class="panel reveal">
+    <div class="kv">
+      <div>Device</div><div>手機</div>
+      <div>Network</div><div>丁丁家／社區／公司／旅館 Wi-Fi</div>
+      <div>關係</div><div><strong>N : N</strong>（Many-to-Many）</div>
+    </div>
+    <p style="margin-top:20px">資料建模時，Many-to-Many 常需要一個中間資料結構來描述「誰在什麼時間、以什麼狀態連到哪個網路」。</p>
+    <div class="panel" style="padding:16px;background:#0e161d">
+      <strong>Connection｜連線紀錄</strong>
+      <div class="record">
+        <div>Device：手機A</div><div>Network：丁丁家WIFI</div>
+        <div>時間：2026-09-10 08:30</div><div>狀態：已連線</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="bridge">
+  <div class="section-head"><div><div class="eyebrow">07 / 空中天橋</div><h2>關係本身，也可能值得管理</h2></div><p>如果「天橋」除了連接兩棟樓，還有自己的資料，它就可能需要被獨立管理。</p></div>
+  <div class="panel reveal">
+    <div class="bridge"><div class="tower"><strong>A 棟</strong><br><span class="sub">20F</span></div><div><div class="bridge-line"></div></div><div class="tower"><strong>B 棟</strong><br><span class="sub">20F</span></div></div>
+    <div class="record" style="margin-top:45px">
+      <div>BridgeID：BR-0201</div><div>起點：A20</div><div>終點：B20</div><div>開放時間：06:00–22:00</div><div>安全狀態：正常</div><div>維護日期：2026-09-01</div>
+    </div>
+    <p>「天橋」最初可以被看成 Relationship 的直觀比喻；但當關係本身有 BridgeID、時間、狀態、維護等資訊時，它也可能成為需要獨立管理的資料對象。這不是固定規則，而是建模決策。</p>
+  </div>
+</section>
+
+<section class="section" id="basement">
+  <div class="section-head"><div><div class="eyebrow">08 / 共用地下室</div><h2>多棟共用：另一個 N : N</h2></div><p>一棟可以使用多個公共設施；一個公共設施也可以被多棟使用。</p></div>
+  <div class="panel reveal basement">
+    <div class="bld">A 棟<br><small>可使用 B1、B2</small></div><div class="bld">B 棟<br><small>可使用 B2、B3</small></div><div class="bld">C 棟<br><small>可使用 B2</small></div>
+    <div class="center"><strong>B2 共用地下室</strong><br><span class="sub">Building N ↔ N Basement</span></div>
+  </div>
+  <div class="panel reveal" style="margin-top:18px"><strong>使用關係（中間資料結構）</strong><div class="record"><div>Building：A</div><div>Basement：B2</div><div>Building：B</div><div>Basement：B2</div><div>Building：C</div><div>Basement：B2</div></div></div>
+</section>
+
+<section class="section" id="landscape">
+  <div class="section-head"><div><div class="eyebrow">09 / 景觀戶</div><h2>特殊，不代表一定是 Entity</h2></div><p>「景觀戶」只是因為看起來特殊，不會自動變成 Entity。</p></div>
+  <div class="panel reveal">
+    <div class="kv"><div>Attribute</div><div>戶別類型</div><div>Value</div><div><strong>景觀戶</strong></div></div>
+    <p>如果公司只需要在住戶資料中標示「是否為景觀戶」，它可以只是某個屬性的值。只有當「景觀戶」本身需要獨立管理一組資料與關係時，才有理由考慮更獨立的模型。</p>
+  </div>
+</section>
+
+<section class="section" id="er">
+  <div class="section-head"><div><div class="eyebrow">10 / ER DIAGRAM 展示室</div><h2>揭開資料結構</h2></div><p>前面看到的是建築。現在把同一個世界轉成資料模型。點擊 Entity 看它的 Attribute。</p></div>
+  <div class="panel er-wrap">
+    <button class="cta" onclick="revealER()">揭開資料結構</button>
+    <div id="erArea" style="display:none;margin-top:25px">
+      <div class="er">
+        <div class="entity" onclick="entityInfo('Building')"><strong>Building</strong><small>PK BuildingID</small></div>
+        <div class="connector"><span>1 : N</span></div>
+        <div class="entity" onclick="entityInfo('Floor')"><strong>Floor</strong><small>PK FloorID<br>FK BuildingID</small></div>
+        <div class="connector"><span>1 : N</span></div>
+        <div class="entity" onclick="entityInfo('Unit')"><strong>Unit</strong><small>PK UnitID<br>FK FloorID</small></div>
+        <div class="entity" onclick="entityInfo('Device')"><strong>Device</strong><small>PK DeviceID</small></div>
+        <div class="connector"><span>N : N</span></div>
+        <div class="entity" onclick="entityInfo('Network')"><strong>Network</strong><small>PK NetworkID</small></div>
+        <div class="entity" onclick="entityInfo('Connection')"><strong>Connection</strong><small>PK ConnectionID<br>FK DeviceID / NetworkID</small></div>
+        <div class="connector"><span>N : N</span></div>
+        <div class="entity" onclick="entityInfo('Bridge')"><strong>Bridge</strong><small>PK BridgeID</small></div>
+        <div class="entity" onclick="entityInfo('Basement')"><strong>Basement</strong><small>PK BasementID</small></div>
+        <div class="connector"><span>N : N</span></div>
+        <div class="entity" onclick="entityInfo('UseRelation')"><strong>UseRelation</strong><small>BuildingID / BasementID</small></div>
+      </div>
+      <div id="entityDetail" class="panel reveal" style="margin-top:18px">
+        <strong>請點擊一個 Entity。</strong><p class="sub">你剛才在建案裡看到的東西，現在有了資料模型中的名字。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="ragic">
+  <div class="section-head"><div><div class="eyebrow">11 / RAGIC 對照室</div><h2>比喻到此為止，回到正式產品語言</h2></div><p>這一站刻意把「建築比喻」與「Ragic 正式定義」分開。</p></div>
+  <div class="panel reveal">
+    <div class="kv">
+      <div>建案比喻</div><div>資料庫／數位建案</div>
+      <div>Ragic 正式概念</div><div><strong>頁籤 → 表單 → 資料</strong></div>
+      <div>建築分類</div><div>頁籤：用來分類與整理表單；頁籤組可再分類頁籤。</div>
+      <div>房屋設計圖</div><div>表單：儲存資料的框架，由欄位組成。</div>
+      <div>房間中的資訊</div><div>欄位：Ragic 儲存資料的基本單位，由欄位標頭與欄位值組成。</div>
+      <div>住戶實際入住內容</div><div>資料：依照已設計的表單與欄位結構填寫的內容。</div>
+      <div>天橋／連線</div><div>Ragic 可用連結表單建立表單間關聯；連結欄位與載入欄位可串接資料。</div>
+      <div>查找與管理</div><div>Ragic 支援搜尋、篩選、報表、權限等功能。</div>
+    </div>
+    <p style="margin-top:18px">Ragic 官方資料：表單是儲存資料的框架；一張表單可儲存多筆資料。欄位由欄位標頭與欄位值組成。頁籤主要用來分類、整理表單；資料則是依照設計好的表單與欄位結構所填寫的內容。citeturn0view0turn0view1</p>
+  </div>
+</section>
+
+<section class="section" id="features">
+  <div class="section-head"><div><div class="eyebrow">12 / 本建案的設計特色</div><h2>不是知識總結，而是建案特色</h2></div><p>如果你真的要住進這個數位建案，它需要具備什麼？</p></div>
+  <div class="cards">
+    <div class="panel map-card"><strong>01｜結構清楚</strong><p>資料不是隨意堆放，而是先設計表單與欄位。</p></div>
+    <div class="panel map-card"><strong>02｜每戶有自己的資料</strong><p>同一個表單可以容納很多筆不同資料。</p></div>
+    <div class="panel map-card"><strong>03｜房屋可以互相連結</strong><p>透過關聯，讓不同資料產生可追蹤的關係。</p></div>
+    <div class="panel map-card"><strong>04｜公共設施可以共用</strong><p>用關係模型處理多棟、多設施的複雜情境。</p></div>
+    <div class="panel map-card"><strong>05｜資料可以被使用</strong><p>搜尋、篩選、統計與報表，讓資料不只是存起來。</p></div>
+    <div class="panel map-card"><strong>06｜權限可以控制</strong><p>不同使用者可以被設定不同的閱覽、新增與編輯權限。</p></div>
+    <div class="panel map-card"><strong>07｜建案可以持續擴建</strong><p>未來可以增加棟別、房型、設備與資料。</p></div>
+  </div>
+</section>
+
+<section class="section" id="quiz">
+  <div class="section-head"><div><div class="eyebrow">FINAL / 建築師驗收</div><h2>你真的看懂這座建案了嗎？</h2></div><p>每題回答後會顯示「建築師解析」，不是只公布答案。</p></div>
+  <div class="quiz" id="quizBox"></div>
+  <div class="score"><strong id="scoreText">尚未完成</strong><button class="cta" onclick="finishQuiz()">完成驗收</button></div>
+</section>
+
+<footer>
+  <div><strong>資料庫建案｜互動式導覽</strong></div>
+  <p>本教材使用住宅建案作為學習比喻；Entity、Attribute、Value、Key、Relationship、Cardinality、ER Diagram 等資料建模概念，與 Ragic 的產品術語並非一一對應。Ragic 的正式結構與功能請以官方文件為準。</p>
+  <p>官方參考：<a href="https://www.ragic.com/intl/zh-TW/ragic-glossary" target="_blank">Ragic 名詞解釋</a>　<a href="https://www.ragic.com/intl/zh-TW/course/0/ragic-key-concepts" target="_blank">Ragic 基本概念介紹及介面導覽</a></p>
+</footer>
+</main>
+
+<div class="modal" id="modal"><div class="modal-box panel"><button class="close" onclick="closeModal()">×</button><div id="modalBody"></div></div></div>
+
+<script>
+const quizData=[
+ {q:"「三房兩廳」比較接近哪一個概念？",o:["Entity","Attribute","Value","Relationship"],a:2,e:"「房型」是描述住戶的一個特徵；「三房兩廳」是該特徵實際填入的內容，因此是 Value。以 Ragic 的正式用語，它會是某欄位的欄位值。"},
+ {q:"「A棟與B棟之間的天橋」在資料建模的直觀理解中比較接近？",o:["Value","Relationship","Attribute","Primary Key"],a:1,e:"天橋描述 A 棟與 B 棟之間的連接，因此是理解 Relationship 的好比喻。但若天橋本身還有大量資料，它也可能需要獨立管理。"},
+ {q:"「一個 WIFI 連接多個設備」比較接近？",o:["1:1","1:N","N:N"],a:1,e:"從 WIFI → 設備觀察，一個 WIFI 可以對應多個設備，所以是 1:N。"},
+ {q:"「手機可以使用多個 WIFI，而一個 WIFI 也可以被多台手機使用」？",o:["1:1","1:N","N:N"],a:2,e:"兩邊都可能對應多個對象，因此是 N:N。這類關係常需要中間資料結構來描述具體連線。"},
+ {q:"「丁丁家的WIFI」是什麼？",o:["Attribute","Value","Entity","Cardinality"],a:1,e:"「WIFI名稱」是欄位標頭／描述特徵；「丁丁家的WIFI」是實際儲存的內容，也就是 Value；Ragic 會稱為欄位值。"},
+ {q:"為什麼「景觀戶」不會因為很特殊就自動成為 Entity？",o:["因為所有特殊名詞都不能當 Entity","因為是否獨立管理要看資料與管理需求","因為 Value 永遠不能成為 Entity","因為 Ragic 不支援景觀戶"],a:1,e:"資料建模不是看名詞是否特殊，而是看它是否值得作為獨立對象管理，是否有自己的屬性與關係。"},
+ {q:"房門鑰匙 A20-201 在教材中主要用來幫助理解什麼？",o:["Value","唯一識別的概念","1:N","表單分段"],a:1,e:"鑰匙不是房子本身，而是辨認這一戶的識別方式。它是理解 Key／唯一識別概念的比喻，不應直接說成『Ragic 的 Primary Key』。"},
+ {q:"Ragic 的正式基本結構應優先記住哪一組？",o:["Entity → Value → Key","頁籤 → 表單 → 資料","Database → SQL → API","Room → WIFI → Device"],a:1,e:"Ragic 官方基本概念以頁籤、表單、欄位、列表頁、表單頁等構成操作與資料結構；本教材以『頁籤 → 表單 → 資料』作為第一層記憶框架。"},
+ {q:"為什麼資料庫要先設計，而不是直接開始輸入？",o:["因為設計完成後永遠不能修改","因為需要先決定資料如何被組織、描述與關聯","因為輸入資料沒有價值","因為只有程式設計師可以輸入"],a:1,e:"先設計結構，可以降低資料混亂、重複與關聯困難。Ragic 的表單就是事先設計好的資料框架，再由使用者依框架建立多筆資料。"},
+ {q:"完成這趟建案導覽後，最接近的理解是？",o:["資料庫就是一棟房子","Ragic 只是電子版 Excel","資料庫是讓資料能被組織、描述、連結、查詢與持續使用的結構","ER Diagram 就是 Ragic 的首頁"],a:2,e:"這正是整個比喻的目的：不是把資料庫想成房子，而是用建案讓你看見『結構、資料、關係、識別與持續擴建』。"}
+];
+function renderQuiz(){
+ const box=document.getElementById("quizBox");
+ box.innerHTML=quizData.map((x,i)=>`<div class="panel q" id="q${i}"><h3>題目 ${i+1}</h3><p>${x.q}</p><div class="opts">${x.o.map((v,j)=>`<button class="test-opt" onclick="answer(${i},${j})">${String.fromCharCode(65+j)}. ${v}</button>`).join("")}</div><div class="explain" id="e${i}"></div></div>`).join("");
+}
+const answered={}; let score=0;
+function answer(i,j){
+ if(answered[i]!==undefined)return;
+ answered[i]=j; const q=document.getElementById("q"+i), buttons=q.querySelectorAll(".test-opt");
+ buttons[j].classList.add(j===quizData[i].a?"correct":"wrong");
+ if(j!==quizData[i].a) buttons[quizData[i].a].classList.add("correct");
+ if(j===quizData[i].a)score++;
+ document.getElementById("e"+i).innerHTML=`<strong>${j===quizData[i].a?"回答正確":"再想一下"}</strong><br>${quizData[i].e}`;
+ q.classList.add("answered"); updateProgress();
+}
+function finishQuiz(){document.getElementById("scoreText").textContent=`目前完成 ${Object.keys(answered).length}/${quizData.length} 題，答對 ${score} 題。${Object.keys(answered).length===quizData.length?(score>=8?" 你已具備基本資料建模語言。":" 建議再走一次 WIFI、天橋與 ER 展示室。"):"請先完成全部題目。"}`; document.getElementById("quiz").scrollIntoView({behavior:"smooth"});}
+function openModal(type){
+ const body=document.getElementById("modalBody");
+ if(type==="key") body.innerHTML=`<div class="eyebrow">KEY DISPLAY</div><h2>房門鑰匙：<span class="key">A20-201</span></h2><p>這把鑰匙不是資料本身，而是辨認這一戶的識別方式。</p><div class="panel reveal"><strong>建築比喻</strong><p>一把鑰匙 → 幫助你理解「唯一識別」的概念。</p><strong>正式提醒</strong><p>Primary Key 是一般資料庫設計概念。Ragic 實務上有「獨特值」以及作為連結依據的「連結欄位」概念，因此不要直接宣稱「Ragic 的 Primary Key 就是這把鑰匙」。</p></div>`;
+ document.getElementById("modal").classList.add("show");
+}
+function closeModal(){document.getElementById("modal").classList.remove("show")}
+function createRecord(){document.getElementById("recordResult").style.display="block";document.getElementById("recordResult").scrollIntoView({behavior:"smooth",block:"center"});updateProgress();}
+const entityData={
+ Building:["BuildingID","棟別名稱","樓層數","地下室使用規則"],
+ Floor:["FloorID","BuildingID","樓層號碼"],
+ Unit:["UnitID","FloorID","戶號","房型","坪數","戶別類型","住戶"],
+ Device:["DeviceID","設備名稱","型號","狀態"],
+ Network:["NetworkID","SSID","網路類型"],
+ Connection:["ConnectionID","DeviceID","NetworkID","連線時間","狀態"],
+ Bridge:["BridgeID","起點","終點","樓層","開放時間","安全狀態"],
+ Basement:["BasementID","樓層","名稱","管理狀態"],
+ UseRelation:["BuildingID","BasementID","使用狀態"]
+};
+function entityInfo(name){document.getElementById("entityDetail").innerHTML=`<h3>${name}</h3><p>這個 Entity 可以被描述的 Attribute／欄位候選：</p><div class="record">${entityData[name].map(x=>`<div>${x}</div>`).join("")}</div><p class="sub">提醒：這是本教材的示意資料模型，不是 Ragic 官方要求的固定表單配置。</p>`}
+function revealER(){document.getElementById("erArea").style.display="block";document.getElementById("erArea").scrollIntoView({behavior:"smooth",block:"center"});updateProgress();}
+function openStation(name,section){alert(`${name}：這是建案導覽的互動熱點。接著請沿著頁面往下，從棟別 → 戶型 → 資料 → 關係 → ER Diagram 完成導覽。`);document.getElementById(section)?.scrollIntoView({behavior:"smooth"})}
+function go(id){document.getElementById(id).scrollIntoView({behavior:"smooth"})}
+function updateProgress(){
+ const ids=["overview","house","attribute","trade","wifi","many","bridge","basement","landscape","er","ragic","features","quiz"];
+ let seen=0;
+ ids.forEach(id=>{const r=document.getElementById(id)?.getBoundingClientRect();if(r&&r.top<window.innerHeight*.72)seen++});
+ const pct=Math.min(100,Math.round(seen/ids.length*100));
+ document.getElementById("progress").style.width=pct+"%";document.getElementById("stationText").textContent=`導覽進度 ${pct}%`;
+}
+window.addEventListener("scroll",updateProgress);renderQuiz();updateProgress();
+document.getElementById("modal").addEventListener("click",e=>{if(e.target.id==="modal")closeModal()});
+</script>
+</body>
+</html>
