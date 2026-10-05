@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>10 關卡人力輪替模擬器 v1</title>
+<style>
+:root{--bg:#f3f5f7;--card:#fff;--text:#172033;--muted:#667085;--line:#d9dee7;--blue:#2563eb;--red:#dc2626;--amber:#d97706;--purple:#7c3aed;--green:#15803d}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:"Segoe UI","Microsoft JhengHei",sans-serif}
+header{background:#172033;color:#fff;padding:22px 28px}header h1{margin:0 0 6px;font-size:25px}header p{margin:0;color:#cbd5e1}
+main{max-width:1450px;margin:auto;padding:20px}.panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:18px;box-shadow:0 2px 8px #0000000a}
+h2{font-size:18px;margin:0 0 12px}.hint,.small{color:var(--muted);font-size:13px}
+.addrow{display:flex;gap:8px;max-width:520px;margin-top:12px}.addrow input{flex:1}
+input[type=text],select{width:100%;padding:8px 9px;border:1px solid #cbd5e1;border-radius:7px;background:#fff}
+button{border:0;border-radius:7px;padding:9px 14px;background:var(--blue);color:#fff;cursor:pointer;font-weight:600}button.secondary{background:#64748b}button.danger{background:var(--red)}button:disabled{opacity:.5}
+.people{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;margin-top:10px}.person{display:flex;align-items:center;gap:8px;border:1px solid var(--line);padding:9px;border-radius:8px;background:#fafafa}.person span{flex:1}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}.level{border:1px solid var(--line);border-radius:10px;padding:14px}.level h3{margin:0 0 10px;font-size:16px}
+.row{display:grid;grid-template-columns:105px 1fr;gap:10px;align-items:center;margin:8px 0}.radio{display:flex;gap:12px;flex-wrap:wrap}.radio label{display:flex;align-items:center;gap:4px;font-size:14px}
+.coop,.skillbox{display:none;margin-top:8px}.coop.show,.skillbox.show{display:block}
+.actions{display:flex;gap:9px;flex-wrap:wrap}.message{display:none;margin-top:12px;padding:11px;border-radius:8px}.message.show{display:block}.error{background:#fee2e2;color:#991b1b}.ok{background:#dcfce7;color:#166534}.warn{background:#fef3c7;color:#92400e}
+.tablewrap{overflow:auto}.schedule{border-collapse:collapse;width:100%;min-width:950px}.schedule th,.schedule td{border:1px solid var(--line);padding:9px;text-align:center}.schedule th{background:#eef2f7}.schedule td:first-child,.schedule th:first-child{text-align:left}.tag{display:inline-block;padding:2px 7px;border-radius:999px;font-size:11px;margin-left:4px}.tagA{background:#dbeafe;color:#1d4ed8}.tagB{background:#fef3c7;color:#92400e}.tagC{background:#ede9fe;color:#6d28a8}.repeat{color:#b91c1c;font-weight:700}.weak{font-size:11px;color:#b45309}
+.legend{display:flex;gap:15px;flex-wrap:wrap;font-size:13px;margin-top:12px}
+@media(max-width:850px){.grid{grid-template-columns:1fr}main{padding:12px}}
+</style>
+</head>
+<body>
+<header>
+<h1>10 關卡人力輪替模擬器 v1</h1>
+<p>第一版提案模型：人員 × 關卡 × 輪替 × A/B/C 限制 × 固定闖關順序</p>
+</header>
+<main>
+
+<section class="panel">
+<h2>① 人員設定</h2>
+<div class="hint">每回合一人只能負責一個關卡。先建立全部可用人員，再勾選哪些人屬於 C 類「高技巧候選人」。</div>
+<div class="addrow">
+<input id="personName" type="text" placeholder="例如：王小明，按 Enter 也可新增">
+<button onclick="addPerson()">新增人員</button>
+</div>
+<div id="peopleList" class="people"></div>
+<div style="margin-top:14px"><b>高技巧候選人（C 類專用）</b><div id="skillList" class="people"></div></div>
+</section>
+
+<section class="panel">
+<h2>② 10 個關卡設定</h2>
+<div class="hint">每一關只能選擇「無、A 合作、B 困難、C 高技巧」其中一項。A 啟用後只能設定 2 或 3 人共同闖關；C 固定從高技巧候選名單取 1 人。</div>
+<div id="levels" class="grid"></div>
+</section>
+
+<section class="panel">
+<h2>③ 模擬控制</h2>
+<div class="actions">
+<button onclick="generateFiveDays()">產生 5 回合</button>
+<button class="secondary" onclick="addOneDay()">再產生下一回合</button>
+<button class="secondary" onclick="resetSchedule()">清除排程</button>
+</div>
+<div id="msg" class="message"></div>
+</section>
+
+<section class="panel">
+<h2>④ 排程結果</h2>
+<div id="summary" class="hint">尚未產生排程。</div>
+<div class="legend"><span>🔵 A＝合作</span><span>🟡 B＝困難</span><span>🟣 C＝高技巧</span><span>一般關卡連續重複＝弱限制放寬</span></div>
+<div class="tablewrap" style="margin-top:12px">
+<table class="schedule">
+<thead id="thead"></thead><tbody id="tbody"></tbody>
+</table>
+</div>
+</section>
+
+<section class="panel">
+<h2>⑤ 第一版規則</h2>
+<ul>
+<li><b>絕對限制：</b>一人一回合只負責一個關卡。</li>
+<li><b>一般關卡：</b>原則上不能連續兩回合由同一人負責；這是弱限制，人力不足時可以放寬。</li>
+<li><b>A 合作：</b>每回合必須由 2 或 3 人共同負責。</li>
+<li><b>B 困難：</b>不可連續兩回合由同一人負責。</li>
+<li><b>C 高技巧：</b>只能由高技巧候選人負責，且不可連續兩回合由同一人負責。</li>
+<li><b>優先順序：</b>B/C 強限制 → A 合作 → 一般關卡弱限制。</li>
+<li><b>流程：</b>第 1 關完成後才進入第 2 關，以此類推；人員不跟著隊伍移動。</li>
+</ul>
+</section>
+</main>
+
+<script>
+const S={people:[],skills:new Set(),levels:[],days:[]};
+
+function init(){S.levels=Array.from({length:10},(_,i)=>({n:i+1,count:1,type:"none",coop:2}));renderAll()}
+function addPerson(){
+ const e=document.getElementById("personName"),n=e.value.trim();if(!n)return;
+ if(S.people.includes(n)){msg("此姓名已存在。","error");return}
+ S.people.push(n);e.value="";renderPeople();renderLevels();resetSchedule();clearMsg();
+}
+function removePerson(n){S.people=S.people.filter(x=>x!==n);S.skills.delete(n);resetSchedule();renderPeople();renderLevels()}
+function toggleSkill(n,on){on?S.skills.add(n):S.skills.delete(n);resetSchedule()}
+function esc(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function js(s){return s.replace(/\\/g,"\\\\").replace(/'/g,"\\'")}
+function renderPeople(){
+ document.getElementById("peopleList").innerHTML=S.people.length?S.people.map(n=>`<div class="person"><span>${esc(n)}</span><button class="danger" style="padding:5px 8px" onclick="removePerson('${js(n)}')">移除</button></div>`).join(""):"<div class='hint'>尚未加入人員。</div>";
+ document.getElementById("skillList").innerHTML=S.people.length?S.people.map(n=>`<label class="person"><input type="checkbox" ${S.skills.has(n)?"checked":""} onchange="toggleSkill('${js(n)}',this.checked)"> ${esc(n)}</label>`).join(""):"<div class='hint'>請先加入人員。</div>";
+}
+function renderLevels(){
+ document.getElementById("levels").innerHTML=S.levels.map((l,i)=>`
+ <div class="level">
+ <h3>第 ${l.n} 關</h3>
+ <div class="row"><label>闖關人數</label><select onchange="setL(${i},'count',this.value)" ${l.type==="A"||l.type==="C"?"disabled":""}>
+ ${[1,2,3].map(x=>`<option value="${x}" ${l.count===x?"selected":""}>${x} 人</option>`).join("")}</select></div>
+ <div class="row"><label>限制類型</label><div class="radio">
+ ${[["none","無"],["A","A｜合作"],["B","B｜困難"],["C","C｜高技巧"]].map(([v,t])=>`<label><input type="radio" name="t${i}" value="${v}" ${l.type===v?"checked":""} onchange="setL(${i},'type',this.value)"> ${t}</label>`).join("")}
+ </div></div>
+ <div class="coop ${l.type==="A"?"show":""}"><label>合作人數　<select onchange="setL(${i},'coop',this.value)"><option value="2" ${l.coop===2?"selected":""}>2 人</option><option value="3" ${l.coop===3?"selected":""}>3 人</option></select></label></div>
+ <div class="skillbox ${l.type==="C"?"show":""}"><div class="small">C 類候選來源：高技巧候選人。此關固定 1 人。</div></div>
+ </div>`).join("");
+}
+function setL(i,k,v){
+ if(k==="type"){S.levels[i].type=v;if(v==="A")S.levels[i].count=S.levels[i].coop;if(v==="C")S.levels[i].count=1}
+ else S.levels[i][k]=Number(v);
+ resetSchedule();renderLevels();
+}
+function pool(l){return l.type==="C"?S.people.filter(p=>S.skills.has(p)):S.people}
+function prevAt(day,i){return S.days[day-1]?.[i]||[]}
+function score(p,day,i,used){
+ if(used.has(p))return -1e9;
+ const l=S.levels[i],prev=prevAt(day,i);
+ if(prev.includes(p)&&(l.type==="B"||l.type==="C"))return -1e9;
+ let z=Math.random();
+ if(prev.includes(p))z-=100;
+ for(let d=day-1;d>=0;d--)if((S.days[d]?.[i]||[]).includes(p))z-=1/(day-d);
+ return z;
+}
+function makeDay(day){
+ const used=new Set(),a=Array(10).fill(null);
+ const order=[...Array(10).keys()].sort((x,y)=>pri(S.levels[x].type)-pri(S.levels[y].type));
+ for(const i of order){
+  const l=S.levels[i],need=l.type==="A"?l.coop:l.count;
+  let c=pool(l).filter(p=>!used.has(p)).sort((x,y)=>score(y,day,i,used)-score(x,day,i,used));
+  let chosen=[];
+  for(const p of c){if(score(p,day,i,used)>-1e8){chosen.push(p);used.add(p)}if(chosen.length===need)break}
+  if(chosen.length<need){
+   if(l.type==="none"||l.type==="A"){
+    const f=pool(l).filter(p=>!used.has(p));
+    for(const p of f){chosen.push(p);used.add(p);if(chosen.length===need)break}
+   }
+  }
+  if(chosen.length<need)return {error:`第 ${l.n} 關需要 ${need} 人，但符合強限制的可用人力不足。${l.type==="C"?"請增加高技巧候選人。":"請增加人員或調整其他關卡人數。"}`};
+  a[i]=chosen;
+ }
+ return a;
+}
+function pri(t){return t==="B"||t==="C"?0:t==="A"?1:2}
+function totalNeed(){return S.levels.reduce((n,l)=>n+(l.type==="A"?l.coop:l.count),0)}
+function generateFiveDays(){
+ if(!S.people.length){msg("請先新增人員。","error");return}
+ if(totalNeed()>S.people.length){msg(`每回合至少需要 ${totalNeed()} 人，但目前只有 ${S.people.length} 人。一人只能負責一個關卡，因此無法排程。`,"error");return}
+ S.days=[];
+ for(let d=0;d<5;d++){const r=makeDay(d);if(r.error){msg(`Day ${d+1}：${r.error}`,"error");renderSchedule();return}S.days.push(r)}
+ msg("已產生 5 回合。B/C 強限制不會被放寬；一般關卡若人力不足，才可能出現連續重複。","ok");renderSchedule();
+}
+function addOneDay(){
+ if(!S.days.length){generateFiveDays();return}
+ if(totalNeed()>S.people.length){msg(`每回合至少需要 ${totalNeed()} 人，但目前只有 ${S.people.length} 人。`,"error");return}
+ const d=S.days.length,r=makeDay(d);if(r.error){msg(`Day ${d+1}：${r.error}`,"error");return}
+ S.days.push(r);msg(`已產生 Day ${d+1}。`,"ok");renderSchedule();
+}
+function resetSchedule(){S.days=[];renderSchedule()}
+function renderSchedule(){
+ const cols=Math.max(1,S.days.length);
+ document.getElementById("thead").innerHTML="<tr><th>關卡</th>"+Array.from({length:cols},(_,i)=>`<th>Day ${i+1}</th>`).join("")+"</tr>";
+ document.getElementById("tbody").innerHTML=S.levels.map((l,i)=>{
+  const tag=l.type==="A"?'<span class="tag tagA">A</span>':l.type==="B"?'<span class="tag tagB">B</span>':l.type==="C"?'<span class="tag tagC">C</span>':"";
+  const cells=Array.from({length:cols},(_,d)=>{
+   const arr=S.days[d]?.[i];if(!arr)return "<td>—</td>";
+   const repeated=d>0&&arr.some(p=>prevAt(d,i).includes(p));
+   return `<td>${arr.map(p=>`<div class="${repeated?"repeat":""}">${esc(p)}</div>`).join("")}${repeated&&l.type==="none"?'<div class="weak">弱限制放寬</div>':""}</td>`;
+  }).join("");
+  return `<tr><td><b>第 ${l.n} 關</b>${tag}<div class="small">${l.type==="A"?l.coop+" 人合作":l.type==="C"?"高技巧候選人":l.type==="B"?"困難關卡":l.count+" 人"}</div></td>${cells}</tr>`;
+ }).join("");
+ document.getElementById("summary").textContent=S.days.length?`目前已建立 ${S.days.length} 回合。每回合每人僅出現在一個關卡。`:"尚未產生排程。";
+}
+function msg(t,c){const e=document.getElementById("msg");e.textContent=t;e.className="message show "+c}
+function clearMsg(){document.getElementById("msg").className="message"}
+document.getElementById("personName").addEventListener("keydown",e=>{if(e.key==="Enter")addPerson()});
+init();
+</script>
+</body>
+</html>
