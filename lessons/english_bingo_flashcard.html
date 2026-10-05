@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>English Bingo Flash Card</title>
+<style>
+  :root{
+    --bg:#f4f1ea;
+    --panel:#ffffff;
+    --ink:#1f2937;
+    --muted:#6b7280;
+    --accent:#b7794f;
+    --accent2:#e8d9ca;
+    --green:#3f7d62;
+    --green2:#dcefe6;
+    --line:#ded7cf;
+    --shadow:0 12px 30px rgba(40,32,24,.10);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family: "Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    background:linear-gradient(180deg,#f7f4ee 0%,#efe8df 100%);
+    color:var(--ink);
+    min-height:100vh;
+  }
+  .app{max-width:980px;margin:auto;padding:24px 16px 44px}
+  header{
+    display:flex;justify-content:space-between;gap:16px;align-items:flex-start;
+    margin-bottom:18px;
+  }
+  h1{margin:0;font-size:clamp(24px,5vw,40px);letter-spacing:.04em}
+  .sub{color:var(--muted);margin-top:8px;font-size:14px;line-height:1.6}
+  .badge{
+    border:1px solid var(--line);background:#fff8f0;border-radius:999px;
+    padding:8px 12px;font-size:13px;white-space:nowrap
+  }
+  .steps{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:18px 0;
+  }
+  .step{
+    padding:10px 8px;text-align:center;border-radius:12px;background:#e7e2dc;
+    color:#7b746d;font-size:13px;font-weight:700;
+  }
+  .step.active{background:var(--accent);color:white}
+  .panel{
+    background:rgba(255,255,255,.94);border:1px solid #eadfd3;border-radius:22px;
+    padding:18px;box-shadow:var(--shadow);
+  }
+  .toolbar{
+    display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;
+    margin-bottom:14px;
+  }
+  .status{font-weight:800}
+  .hint{font-size:13px;color:var(--muted)}
+  button{
+    border:0;border-radius:12px;padding:11px 16px;font-weight:800;cursor:pointer;
+    font-size:15px;transition:.18s transform,.18s opacity,.18s background;
+  }
+  button:active{transform:scale(.98)}
+  .primary{background:var(--accent);color:#fff}
+  .secondary{background:#ece7e2;color:#433c36}
+  .success{background:var(--green);color:#fff}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  .word-pool{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0 18px;
+  }
+  .word-btn{
+    min-height:64px;background:#fff;border:1px solid var(--line);border-radius:14px;
+    padding:8px;font-size:14px;line-height:1.2;
+  }
+  .word-btn small{display:block;color:var(--muted);font-weight:500;margin-top:4px}
+  .word-btn.used{background:#ddd7d1;color:#918980;opacity:.65}
+  .word-btn.selected-word{
+    outline:3px solid var(--accent);
+    background:#fff6ee;
+  }
+  .grid{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
+  }
+  .cell{
+    position:relative;aspect-ratio:1/1;border-radius:18px;
+    background:#fff;border:2px solid #e5ddd5;
+    display:flex;align-items:center;justify-content:center;text-align:center;
+    padding:10px;overflow:hidden;user-select:none;
+    min-width:0;
+  }
+  .cell .num{
+    position:absolute;top:7px;left:9px;font-size:11px;color:#9b9188;font-weight:800
+  }
+  .cell.empty{background:#faf8f5;border-style:dashed;color:#aaa}
+  .cell.flash{cursor:pointer;perspective:800px;padding:0;background:transparent;border:0}
+  .card{
+    width:100%;height:100%;position:relative;transform-style:preserve-3d;
+    transition:transform .45s ease;
+  }
+  .cell.revealed .card{transform:rotateY(180deg)}
+  .face{
+    position:absolute;inset:0;backface-visibility:hidden;border-radius:18px;
+    border:2px solid #e5ddd5;background:#fff;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:10px;gap:8px;
+  }
+  .back{transform:rotateY(180deg);background:#fffaf5}
+  .en{font-weight:900;font-size:clamp(15px,3.6vw,22px);line-height:1.15;word-break:break-word}
+  .zh{font-size:clamp(14px,3.3vw,19px);color:var(--accent);font-weight:800}
+  .cell.bingo{cursor:pointer;background:#fff}
+  .cell.bingo.selected{
+    background:var(--green2);border-color:var(--green);box-shadow:inset 0 0 0 2px rgba(63,125,98,.10)
+  }
+  .cell.bingo.selected::after{
+    content:"✓";position:absolute;right:8px;top:5px;color:var(--green);font-size:20px;font-weight:900
+  }
+  .score{
+    display:flex;gap:12px;flex-wrap:wrap;margin:14px 0 0;
+  }
+  .scorebox{
+    flex:1;min-width:135px;background:#f7f4f0;border-radius:14px;padding:12px;text-align:center
+  }
+  .scorebox b{display:block;font-size:26px}
+  .message{
+    margin-top:14px;padding:12px 14px;border-radius:14px;background:#f5eee6;
+    font-size:14px;line-height:1.6
+  }
+  .hidden{display:none !important}
+  .footer{
+    text-align:center;color:#8a8178;font-size:12px;margin-top:18px
+  }
+  .flash-note{font-size:12px;color:#8b8177}
+  @media(max-width:620px){
+    .app{padding:16px 10px 28px}
+    header{align-items:center}
+    .badge{display:none}
+    .panel{padding:12px;border-radius:18px}
+    .word-pool{grid-template-columns:repeat(2,1fr)}
+    .grid{gap:7px}
+    .cell{border-radius:14px;padding:6px}
+    .face{border-radius:14px;padding:7px}
+    button{padding:10px 13px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div>
+      <h1>English Bingo</h1>
+      <div class="sub">先自己決定單字位置，再用 Flash Card 記憶，最後進入賓果遊戲。</div>
+    </div>
+    <div class="badge">9 words · 3 stages</div>
+  </header>
+
+  <div class="steps">
+    <div class="step active" id="s1">1. 排九宮格</div>
+    <div class="step" id="s2">2. Flash Card</div>
+    <div class="step" id="s3">3. Bingo</div>
+  </div>
+
+  <section class="panel">
+    <div id="setupStage">
+      <div class="toolbar">
+        <div>
+          <div class="status">請依序指定 9 個單字的位置</div>
+          <div class="hint">先點下方單字選取，再點九宮格中你想放的位置。系統不會自動填入。</div>
+        </div>
+        <div>
+          <button class="secondary" id="resetBtn">重新排列</button>
+          <button class="primary" id="finishSetupBtn" disabled>完成記憶配置</button>
+        </div>
+      </div>
+      <div class="word-pool" id="wordPool"></div>
+      <div class="grid" id="setupGrid"></div>
+    </div>
+
+    <div id="flashStage" class="hidden">
+      <div class="toolbar">
+        <div>
+          <div class="status">Flash Card 記憶</div>
+          <div class="hint">九宮格位置不會再改變。點牌翻面，看中文意思。</div>
+        </div>
+        <button class="success" id="startBingoBtn" disabled>開始賓果遊戲</button>
+      </div>
+      <div class="grid" id="flashGrid"></div>
+      <div class="score">
+        <div class="scorebox"><span>已翻牌</span><b id="flipCount">0 / 9</b></div>
+      </div>
+      <div class="message" id="flashMessage">把九張牌全部翻過一次後，就能開始 Bingo。</div>
+    </div>
+
+    <div id="bingoStage" class="hidden">
+      <div class="toolbar">
+        <div>
+          <div class="status">Bingo 遊戲</div>
+          <div class="hint">點選任意格後會鎖定。每完成一條橫、直或斜線，即時計算連線數。</div>
+        </div>
+        <button class="secondary" id="restartBtn">重新開始</button>
+      </div>
+      <div class="grid" id="bingoGrid"></div>
+      <div class="score">
+        <div class="scorebox"><span>已選格數</span><b id="selectedCount">0 / 9</b></div>
+        <div class="scorebox"><span>目前連線</span><b id="lineCount">0</b></div>
+      </div>
+      <div class="message" id="bingoMessage">開始點選格子，看看最後可以完成幾條線。</div>
+    </div>
+  </section>
+  <div class="footer">Arcology · English Learning Game</div>
+</div>
+
+<script>
+const WORDS = [
+  {zh:"軸承組", en:"ROLLER ASSY"},
+  {zh:"驅動板", en:"INNER HALF"},
+  {zh:"彈簧", en:"compression spring"},
+  {zh:"扣環", en:"CIRCLIP"},
+  {zh:"驅動皮帶輪總成", en:"DRIVE PULLEY ASSY"},
+  {zh:"背襯滾子", en:"inner roller"},
+  {zh:"調速板組", en:"OUTER HALF ASSY"},
+  {zh:"襯套", en:"Bushing"},
+  {zh:"連桿", en:"roller lever"}
+];
+
+let layout = Array(9).fill(null);
+let selectedWordIndex = null;
+let flipped = new Set();
+let selectedBingo = new Set();
+
+const setupGrid = document.getElementById("setupGrid");
+const wordPool = document.getElementById("wordPool");
+const finishSetupBtn = document.getElementById("finishSetupBtn");
+
+function setStep(n){
+  [1,2,3].forEach(i => document.getElementById("s"+i).classList.toggle("active", i===n));
+}
+
+function renderPool(){
+  wordPool.innerHTML="";
+  WORDS.forEach((w,i)=>{
+    const used = layout.includes(i);
+    const b=document.createElement("button");
+    b.className="word-btn"+(used?" used":"")+(selectedWordIndex===i?" selected-word":"");
+    b.disabled=used;
+    b.innerHTML=`<strong>${w.en}</strong><small>${w.zh}</small>`;
+    b.onclick=()=>{
+      selectedWordIndex=i;
+      renderPool();
+    };
+    wordPool.appendChild(b);
+  });
+}
+
+function placeWord(cellIndex, wordIndex){
+  if(wordIndex===null || layout.includes(wordIndex)) return;
+  if(layout[cellIndex]!==null) return;
+  layout[cellIndex]=wordIndex;
+  selectedWordIndex=null;
+  renderSetup();
+}
+
+function renderSetup(){
+  setupGrid.innerHTML="";
+  layout.forEach((wi,idx)=>{
+    const c=document.createElement("div");
+    c.className="cell "+(wi===null?"empty":"");
+    c.innerHTML = wi===null
+      ? `<span class="num">${idx+1}</span><span>${selectedWordIndex===null ? "先選單字" : "點這裡放入"}</span>`
+      : `<span class="num">${idx+1}</span><div><div class="en">${WORDS[wi].en}</div><div class="zh">${WORDS[wi].zh}</div></div>`;
+    c.onclick=()=>{
+      if(layout[idx]!==null){
+        layout[idx]=null;
+        renderSetup();
+      }else if(selectedWordIndex!==null){
+        placeWord(idx, selectedWordIndex);
+      }
+    };
+    setupGrid.appendChild(c);
+  });
+  renderPool();
+  finishSetupBtn.disabled = layout.some(v=>v===null);
+}
+
+function startFlash(){
+  document.getElementById("setupStage").classList.add("hidden");
+  document.getElementById("flashStage").classList.remove("hidden");
+  setStep(2);
+  flipped.clear();
+  renderFlash();
+}
+
+function renderFlash(){
+  const grid=document.getElementById("flashGrid");
+  grid.innerHTML="";
+  layout.forEach((wi,idx)=>{
+    const w=WORDS[wi];
+    const c=document.createElement("div");
+    c.className="cell flash"+(flipped.has(idx)?" revealed":"");
+    c.innerHTML=`
+      <div class="card">
+        <div class="face front">
+          <span class="num">${idx+1}</span>
+          <div class="en">${w.en}</div>
+          <div class="flash-note">Tap to flip</div>
+        </div>
+        <div class="face back">
+          <span class="num">${idx+1}</span>
+          <div class="zh">${w.zh}</div>
+          <div class="en">${w.en}</div>
+        </div>
+      </div>`;
+    c.onclick=()=>{
+      flipped.add(idx);
+      c.classList.toggle("revealed");
+      updateFlipStatus();
+    };
+    grid.appendChild(c);
+  });
+  updateFlipStatus();
+}
+
+function updateFlipStatus(){
+  document.getElementById("flipCount").textContent=`${flipped.size} / 9`;
+  const done=flipped.size===9;
+  document.getElementById("startBingoBtn").disabled=!done;
+  document.getElementById("flashMessage").textContent=done
+    ? "九張牌都翻過了。現在每一格會固定顯示中英文，可以開始 Bingo。"
+    : `還有 ${9-flipped.size} 張牌尚未翻過。`;
+}
+
+function startBingo(){
+  document.getElementById("flashStage").classList.add("hidden");
+  document.getElementById("bingoStage").classList.remove("hidden");
+  setStep(3);
+  selectedBingo.clear();
+  renderBingo();
+}
+
+const LINES=[
+  [0,1,2],[3,4,5],[6,7,8],
+  [0,3,6],[1,4,7],[2,5,8],
+  [0,4,8],[2,4,6]
+];
+
+function countLines(){
+  return LINES.filter(line=>line.every(i=>selectedBingo.has(i))).length;
+}
+
+function renderBingo(){
+  const grid=document.getElementById("bingoGrid");
+  grid.innerHTML="";
+  layout.forEach((wi,idx)=>{
+    const w=WORDS[wi];
+    const c=document.createElement("div");
+    c.className="cell bingo"+(selectedBingo.has(idx)?" selected":"");
+    c.innerHTML=`<span class="num">${idx+1}</span><div><div class="zh">${w.zh}</div><div class="en">${w.en}</div></div>`;
+    c.onclick=()=>{
+      if(selectedBingo.has(idx)) return; // 鎖定，不能取消
+      selectedBingo.add(idx);
+      renderBingo();
+    };
+    grid.appendChild(c);
+  });
+
+  const lines=countLines();
+  document.getElementById("selectedCount").textContent=`${selectedBingo.size} / 9`;
+  document.getElementById("lineCount").textContent=lines;
+  const msg=document.getElementById("bingoMessage");
+
+  if(selectedBingo.size===9){
+    msg.innerHTML=`遊戲結束！9 格全部完成，共完成 <strong>${lines}</strong> 條連線。`;
+  }else if(lines>0){
+    msg.innerHTML=`目前已完成 <strong>${lines}</strong> 條連線，還有 ${9-selectedBingo.size} 格未選。`;
+  }else{
+    msg.textContent=`已選 ${selectedBingo.size} 格，繼續完成第一條連線。`;
+  }
+}
+
+document.getElementById("resetBtn").onclick=()=>{
+  layout=Array(9).fill(null);
+  selectedWordIndex=null;
+  renderSetup();
+};
+
+finishSetupBtn.onclick=startFlash;
+document.getElementById("startBingoBtn").onclick=startBingo;
+document.getElementById("restartBtn").onclick=()=>{
+  layout=Array(9).fill(null);
+  selectedWordIndex=null;
+  flipped.clear();
+  selectedBingo.clear();
+  document.getElementById("bingoStage").classList.add("hidden");
+  document.getElementById("flashStage").classList.add("hidden");
+  document.getElementById("setupStage").classList.remove("hidden");
+  setStep(1);
+  renderSetup();
+};
+
+renderSetup();
+</script>
+</body>
+</html>
