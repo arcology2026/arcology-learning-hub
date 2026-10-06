@@ -15,7 +15,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,"Noto Sans
 .kicker{font-size:.875rem;color:var(--muted);letter-spacing:.08em}
 h1{font-size:clamp(2.125rem,6vw,3.625rem);line-height:1.15;margin:8px 0 14px;letter-spacing:-.035em}
 header p{color:var(--muted);font-size:1rem;margin:0;max-width:720px}
-.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:30px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:30px}
 .card{min-width:0;background:var(--paper);border:1px solid var(--line);border-radius:22px;padding:22px;display:flex;flex-direction:column}
 .num{font-size:.875rem;color:var(--muted);letter-spacing:.12em}
 .card h2{font-size:1.375rem;line-height:1.4;margin:8px 0 18px;overflow-wrap:anywhere}
@@ -33,7 +33,7 @@ header p{color:var(--muted);font-size:1rem;margin:0;max-width:720px}
 <body>
 <main class="shell">
 <a class="back" href="../index.html#courses">回到 Arcology 學習入口</a>
-<header><div class="kicker">AI 辦公室進化論</div><h1>課堂練習</h1><p>依 01–03 順序練習。複製卡片內容，貼到同一段 AI 對話，觀察回答如何改變。</p></header>
+<header><div class="kicker">AI 辦公室進化論</div><h1>課堂練習</h1><p>依 01–04 順序練習。複製卡片內容，貼到同一段 AI 對話，觀察回答如何改變。</p></header>
 <section class="grid" aria-label="課堂練習提示詞">
 <article class="card" aria-labelledby="title-01">
 <div class="num">01</div><h2 id="title-01">同一句話，AI會怎麼答？</h2>
@@ -56,6 +56,15 @@ header p{color:var(--muted);font-size:1rem;margin:0;max-width:720px}
 請分列：已知事實、待確認資料、可能原因、確認順序與暫時處置。
 不要把可能原因寫成確定原因。</p>
 <div class="copy-area"><button class="copy" type="button" data-prompt="prompt-03" aria-label="複製 03 卡片內容">一鍵複製</button><p class="copy-status" role="status" aria-live="polite"></p></div>
+</article>
+<article class="card" aria-labelledby="title-04">
+<div class="num">04</div><h2 id="title-04">產生重複提問模板</h2>
+<p class="prompt" id="prompt-04">比較我的原始問題與修正後問題，告訴我：
+1. 我增加了哪些有效資訊？
+2. 你的答案因此有哪些改變？
+3. 我的提問仍缺少什麼？
+4. 下次遇到類似問題，我可以使用什麼固定提問模板？</p>
+<div class="copy-area"><button class="copy" type="button" data-prompt="prompt-04" aria-label="複製 04 卡片內容">一鍵複製</button><p class="copy-status" role="status" aria-live="polite"></p></div>
 </article>
 </section>
 <footer class="foot">Arcology Learning Hub · OPEN · EVOLVING · ADAPTING</footer>
